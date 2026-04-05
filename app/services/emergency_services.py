@@ -1,4 +1,5 @@
-from app.ontology.ontology_service import get_disease_scores
+from app.scoring.bayesian import bayesian_score
+from app.ontology.ontology_service import get_all_diseases
 
 def extract_symptoms(text: str):
     text = text.lower()
@@ -12,14 +13,20 @@ def extract_symptoms(text: str):
 
 # CHANGE 1: Made this function async
 async def compute_probability(symptoms):
-    # CHANGE 2: Added await here
-    results = await get_disease_scores(symptoms)
+    disease_data = await get_all_diseases()
+
+    results = bayesian_score(symptoms, disease_data)
 
     if not results:
-        return 0.0, "unknown"
+        return 0.0, "unknown", 0.0
 
     top = results[0]
-    return top["probability"], top["disease"], top["severity_weight"]
+
+    return (
+        top["probability"],
+        top["disease"],
+        top["severity_weight"]  
+    )
 
 def classify_severity(probability, severity_weight):
     final_risk_score = probability * severity_weight
@@ -43,11 +50,18 @@ def trigger_emergency(severity):
 # CHANGE 3: Made this function async
 async def process_emergency(payload):
     symptoms = extract_symptoms(payload.raw_symptoms)
-    print(f"DEBUG - Symptoms extracted: {symptoms}")
-    # CHANGE 4: Added await here
-    probability, disease, db_severity = await compute_probability(symptoms)
-    
-    severity = classify_severity(probability, db_severity)
+    print(f"[DEBUG] Symptoms extracted: {symptoms}")
+
+    probability, disease, severity_weight = await compute_probability(symptoms)
+
+    print(f"[DEBUG] Top Disease: {disease}")
+    print(f"[DEBUG] Probability: {probability}")
+    print(f"[DEBUG] Severity Weight (DB): {severity_weight}")
+
+    severity = classify_severity(probability, severity_weight)
+
+    print(f"[DEBUG] Final Severity Category: {severity}")
+
     hospital = get_hospital_recommendation(severity)
     call_status = trigger_emergency(severity)
 

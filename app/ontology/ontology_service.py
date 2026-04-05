@@ -1,5 +1,9 @@
 from app.core.db import ontology_collection
 
+
+async def get_all_diseases():
+    return await ontology_collection.find().to_list(length=100)
+
 # 1. Add 'async' to the function definition
 async def get_disease_scores(symptoms):
     diseases = []

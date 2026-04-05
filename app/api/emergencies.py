@@ -1,7 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.services.emergency_services import process_emergency
-
+from app.scoring.bayesian import bayesian_score
+from app.ontology.ontology_service import get_all_diseases
 router = APIRouter()
 
 class Location(BaseModel):
