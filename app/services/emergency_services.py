@@ -1,15 +1,6 @@
 from app.scoring.bayesian import bayesian_score
 from app.ontology.ontology_service import get_all_diseases
-
-def extract_symptoms(text: str):
-    text = text.lower()
-    symptoms = []
-    if "chest pain" in text:
-        symptoms.append("chest_pain")
-    if "breath" in text or "dyspnea" in text:
-        symptoms.append("dyspnea")
-
-    return symptoms
+from app.nlp.medical_extractor import extract_symptoms
 
 # CHANGE 1: Made this function async
 async def compute_probability(symptoms):
